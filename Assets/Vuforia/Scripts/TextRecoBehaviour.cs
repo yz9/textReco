@@ -18,5 +18,20 @@ namespace Vuforia
     /// </summary> 
     public class TextRecoBehaviour : TextRecoAbstractBehaviour
     {
+    	public Image ROI;
+    	private TextTracker textTracker;
+
+	    void initTextTracker(){
+	    	textTracker = (TextTracker)TrackerManager.Instance.GetTracker<TextTracker>(); 
+			Rect regionOfInterestTracking =  new Rect(Screen.width * 0.1f, Screen.height * 0.1f, 
+				                                          Screen.width * 0.8f, Screen.height * 0.4f);
+			Rect regionOfInterestDetection = new Rect(Screen.width * 0.2f, Screen.height * 0.2f, 
+				                                          Screen.width * 0.6f, Screen.height * 0.2f);
+			textTracker.SetRegionOfInterest(regionOfInterestDetection, regionOfInterestTracking); 
+	    }
+
+	    void Start(){
+            //initTextTracker();           	
+	    }
     }
 }
