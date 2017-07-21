@@ -26,6 +26,7 @@ namespace Vuforia
  
         private TrackableBehaviour mTrackableBehaviour;
         public Text translate; 
+        public Text orginalText; 
 
         #endregion // PRIVATE_MEMBER_VARIABLES
 
@@ -40,6 +41,7 @@ namespace Vuforia
             {
                 mTrackableBehaviour.RegisterTrackableEventHandler(this);
             }
+            translate.enabled = false;
 
         }
 
@@ -76,7 +78,7 @@ namespace Vuforia
             string getLangs = "https://https://dictionary.yandex.net/api/v1/dicservice.json/getLangs?key=dict.1.1.20170712T213201Z.011f10ef04c6cd2b.9429d4487d86ea0269e4039b4776af5d480b71e1&lang=fr&text" + word;
             string lookUp = "https://dictionary.yandex.net/api/v1/dicservice.json/lookup?key=dict.1.1.20170712T213201Z.011f10ef04c6cd2b.9429d4487d86ea0269e4039b4776af5d480b71e1&lang=en-fr&text=" + word;
 
-            string url = "https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20170712T213228Z.50f66cb053334861.3305946c36e78fabf910df5491ed59c20967ebfd&lang=fr&text=" + word;
+            string url = "https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20170712T213228Z.50f66cb053334861.3305946c36e78fabf910df5491ed59c20967ebfd&lang=zh&text=" + word;
             WWW www = new WWW(url);
             yield return www;
 
@@ -85,12 +87,23 @@ namespace Vuforia
             Debug.Log("Translate " + word + " ");
             JsonText myObject = new JsonText();
             myObject = JsonUtility.FromJson<JsonText>(json);
-            translate.text = myObject.text[0];
-            Debug.Log("Translate: (" + myObject.lang + ") " + word + " to " + translate.text);
+            setContent(myObject, word);
+            //translate.text = myObject.text[0];
+            //Debug.Log("Translate: (" + myObject.lang + ") " + word + " to " + translate.text);
 
         }
 
+        public void setContent(JsonText json, string word){
+            orginalText.text = word;
+            translate.text = json.text[0];
+            
+            Debug.Log("Translate: (" + json.lang + ") " + json.text[0]);
+        }
 
+        public void setActive(bool active){
+            orginalText.enabled = active;
+            translate.enabled = active;
+        }
 
 
         #region PRIVATE_METHODS
@@ -115,6 +128,8 @@ namespace Vuforia
 
             Debug.Log("Trackable " + mTrackableBehaviour.TrackableName + " found");
 
+            setActive(true);
+
             StartCoroutine("Translate", mTrackableBehaviour.TrackableName);
 
         }
@@ -135,6 +150,8 @@ namespace Vuforia
             {
                 component.enabled = false;
             }
+
+            setActive(false);
 
             Debug.Log("Trackable " + mTrackableBehaviour.TrackableName + " lost");
         }
