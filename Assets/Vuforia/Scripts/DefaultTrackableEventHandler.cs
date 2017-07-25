@@ -23,17 +23,18 @@ namespace Vuforia
                                                 ITrackableEventHandler
     {
         #region PRIVATE_MEMBER_VARIABLES
- 
+
         private TrackableBehaviour mTrackableBehaviour;
-        public Text translate; 
-        public Text orginalText; 
+        public Text translate;
+        public Text orginalText;
+        public Text scan;
 
         #endregion // PRIVATE_MEMBER_VARIABLES
 
 
 
         #region UNTIY_MONOBEHAVIOUR_METHODS
-    
+
         void Start()
         {
             mTrackableBehaviour = GetComponent<TrackableBehaviour>();
@@ -96,13 +97,14 @@ namespace Vuforia
         public void setContent(JsonText json, string word){
             orginalText.text = word;
             translate.text = json.text[0];
-            
+
             Debug.Log("Translate: (" + json.lang + ") " + json.text[0]);
         }
 
         public void setActive(bool active){
             orginalText.enabled = active;
             translate.enabled = active;
+            scan.enabled = !active;
         }
 
 

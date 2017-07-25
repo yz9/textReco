@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/ARsetup.unity
+- path: Assets/SamplesScenes/Vuforia-3-TextReco.unity
   isLoaded: 1
   isActive: 1
