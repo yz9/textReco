@@ -28,6 +28,8 @@ namespace Vuforia
         public Text translate;
         public Text orginalText;
         public Text scan;
+        //public UnityEngine.UI.Image output;
+
 
         #endregion // PRIVATE_MEMBER_VARIABLES
 
@@ -105,6 +107,7 @@ namespace Vuforia
             orginalText.enabled = active;
             translate.enabled = active;
             scan.enabled = !active;
+            //output.enabled = active;
         }
 
 

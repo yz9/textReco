@@ -100,6 +100,7 @@
      <Compile Include="Assets\Vuforia\Scripts\Internal\VuforiaBehaviourComponentFactory.cs" />
      <Compile Include="Assets\Vuforia\Scripts\Internal\WSAUnityPlayer.cs" />
      <Compile Include="Assets\Vuforia\Scripts\MaskOutBehaviour.cs" />
+     <Compile Include="Assets\Vuforia\Scripts\Mode.cs" />
      <Compile Include="Assets\Vuforia\Scripts\MultiTargetBehaviour.cs" />
      <Compile Include="Assets\Vuforia\Scripts\ObjectTargetBehaviour.cs" />
      <Compile Include="Assets\Vuforia\Scripts\PropBehaviour.cs" />
