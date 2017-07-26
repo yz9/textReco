@@ -19,6 +19,9 @@ namespace Vuforia
         public int code;
     }
 
+    public class XmlText{
+      public string name;
+    }
     /// <summary>
     /// A custom handler that implements the ITrackableEventHandler interface.
     /// </summary>
@@ -34,7 +37,8 @@ namespace Vuforia
         public Text buttonText;
         //public UnityEngine.UI.Image output;
 
-        JsonText myObject = new JsonText();
+        JsonText myJson = new JsonText();
+        XmlText myXml = new XmlText();
         public bool status;
 
 
@@ -95,8 +99,8 @@ namespace Vuforia
             string json = www.text;
             print(json);
             Debug.Log("Translate " + word + " ");
-            myObject = JsonUtility.FromJson<JsonText>(json);
-            setContent(myObject, word);
+            myJson = JsonUtility.FromJson<JsonText>(json);
+            setContent(myJson, null, word);
 
         }
 
@@ -112,7 +116,7 @@ namespace Vuforia
           print(result);
         }
 
-        public void setContent(JsonText json, string word){
+        public void setContent(JsonText json, XmlText xml, string word){
           if(buttonText.text == "Dict"){
             originalText.text = word;
             translate.text = json.text[0];
