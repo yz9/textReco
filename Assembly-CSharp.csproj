@@ -107,7 +107,6 @@
      <Compile Include="Assets\Vuforia\Scripts\ReconstructionBehaviour.cs" />
      <Compile Include="Assets\Vuforia\Scripts\ReconstructionFromTargetBehaviour.cs" />
      <Compile Include="Assets\Vuforia\Scripts\SurfaceBehaviour.cs" />
-     <Compile Include="Assets\Vuforia\Scripts\Test.cs" />
      <Compile Include="Assets\Vuforia\Scripts\TextEvent.cs" />
      <Compile Include="Assets\Vuforia\Scripts\TextRecoBehaviour.cs" />
      <Compile Include="Assets\Vuforia\Scripts\TurnOffBehaviour.cs" />

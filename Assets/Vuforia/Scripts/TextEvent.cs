@@ -34,7 +34,7 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
     private bool mVideoBackgroundChanged;
 
     private readonly List<WordResult> mSortedWords = new List<WordResult>();
-    private Text[] mDisplayedWords;
+
 
     [SerializeField]
     private Material boundingBoxMaterial = null;
@@ -42,7 +42,7 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
 
 
     #region PUBLIC_MEMBERS
-    public Canvas textRecoCanvas;
+    //public Canvas textRecoCanvas;
     #endregion //PUBLIC_MEMBERS
 
 
@@ -67,7 +67,6 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
         // register for the OnVideoBackgroundConfigChanged event at the VuforiaBehaviour
         VuforiaARController.Instance.RegisterVideoBgEventHandler(this);
 
-        mDisplayedWords = textRecoCanvas ? textRecoCanvas.GetComponentsInChildren<Text>(true) : new Text[0];
     }
 
     void OnRenderObject()
@@ -92,22 +91,6 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
                 mVideoBackgroundChanged = false;
             }
 
-            // Clear the content of the displayed words
-            foreach (var dw in mDisplayedWords)
-            {
-                dw.text = "";
-            }
-
-            // Update the list of words displayed
-            int wordIndex = 0;
-            foreach (var word in mSortedWords)
-            {
-                if (word.Word != null && wordIndex < mDisplayedWords.Length)
-                {
-                    mDisplayedWords[wordIndex].text = word.Word.StringValue;
-                }
-                wordIndex++;
-            }
         }
     }
     #endregion //MONOBEHAVIOUR_METHODS

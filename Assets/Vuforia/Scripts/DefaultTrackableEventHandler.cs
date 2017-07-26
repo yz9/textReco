@@ -7,6 +7,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Xml;
+using System.Xml.Serialization;
 namespace Vuforia
 {
     [System.Serializable]
@@ -16,6 +18,7 @@ namespace Vuforia
         public string lang;
         public int code;
     }
+
     /// <summary>
     /// A custom handler that implements the ITrackableEventHandler interface.
     /// </summary>
@@ -26,9 +29,13 @@ namespace Vuforia
 
         private TrackableBehaviour mTrackableBehaviour;
         public Text translate;
-        public Text orginalText;
+        public Text originalText;
         public Text scan;
+        public Text buttonText;
         //public UnityEngine.UI.Image output;
+
+        JsonText myObject = new JsonText();
+        public bool status;
 
 
         #endregion // PRIVATE_MEMBER_VARIABLES
@@ -88,26 +95,59 @@ namespace Vuforia
             string json = www.text;
             print(json);
             Debug.Log("Translate " + word + " ");
-            JsonText myObject = new JsonText();
             myObject = JsonUtility.FromJson<JsonText>(json);
             setContent(myObject, word);
-            //translate.text = myObject.text[0];
-            //Debug.Log("Translate: (" + myObject.lang + ") " + word + " to " + translate.text);
 
+        }
+
+        IEnumerator Dictionary(string word){
+          string thesaurus = "http://www.dictionaryapi.com/api/v1/references/thesaurus/xml/" + word.ToLower() + "?key=5768a820-ba45-43c6-ac2b-4a04ee6d8527";
+
+          string learner = "http://www.dictionaryapi.com/api/v1/references/learners/xml/apple?key=d8cdbef7-243f-4baa-9579-08c4335fe96d";
+          WWW www = new WWW(thesaurus);
+          yield return www;
+
+          Debug.Log("Dictionary");
+          string result = www.text;
+          print(result);
         }
 
         public void setContent(JsonText json, string word){
-            orginalText.text = word;
+          if(buttonText.text == "Dict"){
+            originalText.text = word;
             translate.text = json.text[0];
-
             Debug.Log("Translate: (" + json.lang + ") " + json.text[0]);
+          }
+          else{
+            translate.text = "dict hello";
+            Debug.Log("Dict");
+          }
         }
 
         public void setActive(bool active){
-            orginalText.enabled = active;
+            originalText.enabled = active;
             translate.enabled = active;
             scan.enabled = !active;
+            if(!active){
+              originalText.text = "";
+              translate.text = "";
+            }
             //output.enabled = active;
+        }
+
+        public void Update(){
+          //if button is pressed
+          if(status){
+            if(buttonText.text == "Trans"){
+              StartCoroutine("Dictionary", mTrackableBehaviour.TrackableName);
+            }
+            else{
+              StartCoroutine("Translate", mTrackableBehaviour.TrackableName.ToLower());
+            }
+            setActive(true);
+          }else{
+            setActive(false);
+          }
         }
 
 
@@ -133,9 +173,7 @@ namespace Vuforia
 
             Debug.Log("Trackable " + mTrackableBehaviour.TrackableName + " found");
 
-            setActive(true);
-
-            StartCoroutine("Translate", mTrackableBehaviour.TrackableName);
+            status = true;
 
         }
 
@@ -156,9 +194,8 @@ namespace Vuforia
                 component.enabled = false;
             }
 
-            setActive(false);
-
             Debug.Log("Trackable " + mTrackableBehaviour.TrackableName + " lost");
+            status = false;
         }
 
         #endregion // PRIVATE_METHODS

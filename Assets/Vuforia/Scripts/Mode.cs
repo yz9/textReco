@@ -15,7 +15,6 @@ public class Mode : MonoBehaviour {
 		else{
 			mode.text = "Dict";
 		}
-
 	}
 
 	// Update is called once per frame
