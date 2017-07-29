@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Xml.Linq;
 namespace Vuforia
 {
     [System.Serializable]
@@ -20,8 +21,11 @@ namespace Vuforia
     }
 
     public class XmlText{
-      public string name;
+      public string fl;
+      public int sn;
+      public string dt;
     }
+
     /// <summary>
     /// A custom handler that implements the ITrackableEventHandler interface.
     /// </summary>
@@ -96,35 +100,85 @@ namespace Vuforia
             WWW www = new WWW(url);
             yield return www;
 
-            string json = www.text;
-            print(json);
-            Debug.Log("Translate " + word + " ");
-            myJson = JsonUtility.FromJson<JsonText>(json);
-            setContent(myJson, null, word);
-
+            if(www.error == null){
+              string json = www.text;
+              print(json);
+              Debug.Log("Translate " + word + " ");
+              myJson = JsonUtility.FromJson<JsonText>(json);
+              setContent(myJson, null, word);
+            }
+            else{
+              //error
+            }
         }
 
         IEnumerator Dictionary(string word){
-          string thesaurus = "http://www.dictionaryapi.com/api/v1/references/thesaurus/xml/" + word.ToLower() + "?key=5768a820-ba45-43c6-ac2b-4a04ee6d8527";
+          //string thesaurus = "http://www.dictionaryapi.com/api/v1/references/thesaurus/xml/" + word.ToLower() + "?key=5768a820-ba45-43c6-ac2b-4a04ee6d8527";
+          //test
 
-          string learner = "http://www.dictionaryapi.com/api/v1/references/learners/xml/apple?key=d8cdbef7-243f-4baa-9579-08c4335fe96d";
-          WWW www = new WWW(thesaurus);
+          string learner = "http://www.dictionaryapi.com/api/v1/references/learners/xml/" + word.ToLower() + "?key=d8cdbef7-243f-4baa-9579-08c4335fe96d";
+          WWW www = new WWW(learner);
           yield return www;
 
-          Debug.Log("Dictionary");
-          string result = www.text;
-          print(result);
+          if(www.error == null){
+            Debug.Log("Dictionary");
+            string result = www.text;
+            print(result);
+            //XmlDocument xmlDoc = new XmlDocument();
+            //xmlDoc.LoadXml(result);
+            /*
+            XmlNodeList list = xmlDoc.GetElementsByTagName("entry");
+            foreach (XmlNode levels in list){
+              XmlNodeList nodes = levels.ChildNodes;
+              foreach(XmlNode node in nodes){
+                if(node.Name == "fl"){
+                  Debug.Log("found fl:" + node.InnerText);
+                }
+              }
+            }
+            */
+            var doc = XDocument.Parse(result);
+            var entries = doc.Root.Elements("entry");
+            foreach(var entry in entries){
+              myXml.fl = (string)entry.Element("fl");
+              var defs = entry.Descendants("def");
+              foreach(var def in defs){
+                if(def.Element("sn") != null)
+                  myXml.sn = (int)def.Element("sn");
+                var dt = def.Element("dt");
+                if(dt.Descendants("vi") != null)
+                  dt.Descendants("vi").Remove();
+                if(dt.Descendants("dx") != null)
+                  dt.Descendants("dx").Remove();
+                myXml.dt = (string)dt;
+                Debug.Log("fl: " + myXml.fl + "sn: " + myXml.sn + "dt: " + myXml.dt);
+                break;
+              }
+              break;
+
+            }
+            setContent(null, myXml, word);
+          } //end if
+          else{
+            //error
+          }
         }
 
         public void setContent(JsonText json, XmlText xml, string word){
           if(buttonText.text == "Dict"){
-            originalText.text = word;
-            translate.text = json.text[0];
-            Debug.Log("Translate: (" + json.lang + ") " + json.text[0]);
+              if(json != null){
+              originalText.text = word;
+              translate.text = json.text[0];
+              Debug.Log("Translate: (" + json.lang + ") " + json.text[0]);
+            //  break;
+            }
           }
           else{
-            translate.text = "dict hello";
+            if(xml != null){
+            translate.text = xml.fl + "\n <size=20>" + xml.sn + " " + xml.dt + "</size>";
             Debug.Log("Dict");
+            //break;
+            }
           }
         }
 
@@ -140,12 +194,12 @@ namespace Vuforia
         }
 
         public void Update(){
-          //if button is pressed
+          //if found
           if(status){
             if(buttonText.text == "Trans"){
               StartCoroutine("Dictionary", mTrackableBehaviour.TrackableName);
             }
-            else{
+           else{
               StartCoroutine("Translate", mTrackableBehaviour.TrackableName.ToLower());
             }
             setActive(true);
