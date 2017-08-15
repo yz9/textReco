@@ -4,10 +4,30 @@ Copyright (c) 2012-2015 Qualcomm Connected Experiences, Inc. All Rights Reserved
 Vuforia is a trademark of PTC Inc., registered in the United States and other
 countries.
 ===============================================================================*/
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Vuforia;
+using System.Xml;
+using System.Xml.Serialization;
+using System.Xml.Linq;
+
+[System.Serializable]
+public class JsonText
+{
+    public string[] text;
+    public string lang;
+    public int code;
+}
+
+public class XmlText{
+  public string fl;
+  public int sn;
+  public string dt;
+  public string pr;
+  public string vi;
+}
 
 /// <summary>
 /// A custom event handler for TextReco-events
@@ -16,8 +36,8 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
 {
     #region PRIVATE_MEMBERS
     // Size of text search area in percentage of screen
-    private float mLoupeWidth = 0.5f;
-    private float mLoupeHeight = 0.15f;
+    private float mLoupeWidth = 0.15f;
+    private float mLoupeHeight = 0.08f;
 
     // Line width of viusalized boxes around detected words
     private float mBBoxLineWidth = 3.0f;
@@ -39,6 +59,24 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
     [SerializeField]
     private Material boundingBoxMaterial = null;
     #endregion //PRIVATE_MEMBERS
+
+    #region PRIVATE_MEMBER_VARIABLES
+
+    private TrackableBehaviour mTrackableBehaviour;
+    public Text translate;
+    public Text originalText;
+    public Text scan;
+    public Text buttonText;
+    //public UnityEngine.UI.Image output;
+    private string myWord = null;
+    private string myLang = "zh";
+    List<string> values = new List<string>() {"zh", "ja", "fr", "es"};
+    public Dropdown dropdownUI;
+
+    JsonText myJson = new JsonText();
+    XmlText myXml = new XmlText();
+    public bool status;
+    #endregion // PRIVATE_MEMBER_VARIABLES
 
 
     #region PUBLIC_MEMBERS
@@ -66,12 +104,109 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
 
         // register for the OnVideoBackgroundConfigChanged event at the VuforiaBehaviour
         VuforiaARController.Instance.RegisterVideoBgEventHandler(this);
+        translate.enabled = false;
+
+        //StartCoroutine("lookUp");
 
     }
 
     void OnRenderObject()
     {
         DrawWordBoundingBoxes();
+    }
+
+    IEnumerator lookUp() {
+
+     if(myWord != null){
+       if(buttonText.text == "Dict"){
+        myLang = values[dropdownUI.value];
+        Debug.Log(myLang);
+        string url = "https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20170712T213228Z.50f66cb053334861.3305946c36e78fabf910df5491ed59c20967ebfd&lang=" + myLang + "&text=" + myWord;
+        WWW www = new WWW(url);
+        yield
+        return www;
+
+        if (www.error == null) {
+         string json = www.text;
+         //print(json);
+         Debug.Log("Translate " + myWord + " ");
+         myJson = JsonUtility.FromJson < JsonText > (json);
+         setContent(myJson, null, myWord);
+        } else {
+         //error
+        }
+       }
+      else{
+        string learner = "http://www.dictionaryapi.com/api/v1/references/learners/xml/" + myWord + "?key=d8cdbef7-243f-4baa-9579-08c4335fe96d";
+        WWW www = new WWW(learner);
+        yield
+        return www;
+
+        if (www.error == null) {
+         Debug.Log("Dictionary");
+         string result = www.text;
+         print(result);
+         var doc = XDocument.Parse(result);
+         var entries = doc.Root.Elements("entry");
+         foreach(var entry in entries) {
+          myXml.pr = (string) entry.Element("pr");
+          myXml.fl = (string) entry.Element("fl");
+          var defs = entry.Descendants("def");
+          foreach(var def in defs) {
+           if (def.Element("sn") != null)
+            myXml.sn = (int) def.Element("sn");
+           var dt = def.Element("dt");
+           if (dt.Descendants("vi") != null)
+            myXml.vi = (string) def.Element("vi");
+            //dt.Descendants("vi").Remove();
+           if (dt.Descendants("dx") != null)
+            dt.Descendants("dx").Remove();
+           myXml.dt = (string) dt;
+           //Debug.Log("fl: " + myXml.fl + "sn: " + myXml.sn + "dt: " + myXml.dt);
+           break;
+          }
+          break;
+         }
+         setContent(null, myXml, myWord);
+        } //end if
+        else {
+         //error
+        }
+       }
+
+     }
+
+
+
+    }
+
+    public void setContent(JsonText json, XmlText xml, string word) {
+     originalText.text = word;
+     if (buttonText.text == "Dict") {
+      if (json != null) {
+       translate.text = json.text[0];
+       Debug.Log("Translate: (" + json.lang + ") " + json.text[0]);
+       //  break;
+      }
+     } else {
+      if (xml != null) {
+       translate.text = "<b>" + word + "</b> [" + xml.pr + "] " + xml.fl + "\n <size=22>"
+                        + xml.sn + " " + xml.dt + "\n <i>" + xml.vi + "</i></size>" ;
+       Debug.Log("Dict");
+       //break;
+      }
+     }
+    }
+
+    public void setActive(bool active) {
+     originalText.enabled = active;
+     translate.enabled = active;
+     scan.enabled = !active;
+     if (!active) {
+      originalText.text = "";
+      translate.text = "";
+     }
+     //output.enabled = active;
     }
 
     void Update()
@@ -92,6 +227,15 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
             }
 
         }
+        //if found
+        if(status && myWord != null){
+          StartCoroutine("lookUp");
+          setActive(true);
+        }else{
+          StopCoroutine("lookUp");
+          setActive(false);
+        }
+
     }
     #endregion //MONOBEHAVIOUR_METHODS
 
@@ -119,6 +263,9 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
 
         Debug.Log("Text: New word: " + wordResult.Word.StringValue + "(" + wordResult.Word.ID + ")");
         AddWord(wordResult);
+        status = true;
+        myWord = wordResult.Word.StringValue.ToLower();
+        Debug.Log("myword is " + myWord + ".");
     }
 
     /// <summary>
@@ -132,6 +279,8 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
         Debug.Log("Text: Lost word: " + word.StringValue + "(" + word.ID + ")");
 
         RemoveWord(word);
+        status = false;
+        myWord = null;
     }
     #endregion //PUBLIC_METHODS
 
@@ -304,7 +453,7 @@ public class TextEvent : MonoBehaviour, ITextRecoEventHandler, IVideoBackgroundE
         var leftOffset = Screen.width / 2.0f - loupeWidth / 2.0f;
         var topOffset = Screen.height / 2.0f - loupeHeight / 2.0f;
         mDetectionAndTrackingRect = new Rect(leftOffset, topOffset, loupeWidth, loupeHeight);
-				Debug.Log(mDetectionAndTrackingRect);
+				//Debug.Log(mDetectionAndTrackingRect);
 		}
     #endregion //PRIVATE_METHODS
 }
